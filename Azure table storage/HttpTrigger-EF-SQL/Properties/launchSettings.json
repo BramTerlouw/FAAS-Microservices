@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "HttpTrigger_EF_SQL": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7230",
+      "launchBrowser": false
+    }
+  }
+}
