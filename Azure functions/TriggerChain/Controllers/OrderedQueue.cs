@@ -1,4 +1,3 @@
-using System;
 using Azure.Storage.Queues.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -20,13 +19,14 @@ namespace TriggerChain.Controllers
         }
 
         [Function(nameof(OrderedQueue))]
-        public void Run([QueueTrigger("orderedproductqueue", Connection = "default")] string message)
+        public void Run([QueueTrigger("orderedproductqueue", Connection = "default")] QueueMessage message)
         {
             _logger.LogInformation("C# Queue trigger function processed a request.");
 
-            // Deserialize message back into a product
-            Product? product = JsonConvert.DeserializeObject<Product>(message);
-
+            // Deserialize message back into a product.
+            Product? product = JsonConvert.DeserializeObject<Product>(message.Body.ToString());
+            
+            // If product not null, add to database.
             if (product != null) 
             {
                 _logger.LogInformation("Ordered product is added to CosmosDB");

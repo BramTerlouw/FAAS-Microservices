@@ -2,8 +2,6 @@ using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 using TriggerChain.Models;
 using TriggerChain.Services;
@@ -22,16 +20,31 @@ namespace TriggerChain.Controllers
         }
 
         [Function("ReceiveHttp")]
-        public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
+        public CustomOutputType Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
 
-            // Create product to be added (!!Ideally in body of post req!!)
+            // Create product to be added. (!!Ideally in body of post req!!)
             Product product = new Product(1, "NVIDIA RTX 4090", false);
-            await _queueService.SendQueueMessageAsync("productqueue", product);
+            string serializedProduct = JsonConvert.SerializeObject(product);
 
-            // Send response code 200 to caller of http req
-            return req.CreateResponse(HttpStatusCode.OK); ;
+            // Create response with headers
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
+
+            // Add serialized product and res to type with output binding to queue.
+            return new CustomOutputType
+            {
+                Product = serializedProduct,
+                HttpResponse = response
+            };
+        }
+
+        public class CustomOutputType
+        {
+            [QueueOutput("productqueue")]
+            public string? Product { get; set; }
+            public HttpResponseData? HttpResponse { get; set; }
         }
     }
 }
