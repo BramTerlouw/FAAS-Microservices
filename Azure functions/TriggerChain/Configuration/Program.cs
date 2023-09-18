@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Configuration;
 using System.Drawing.Text;
+using TriggerChain.Models;
 using TriggerChain.Services;
 
 var host = new HostBuilder()
@@ -13,6 +14,7 @@ var host = new HostBuilder()
       .ConfigureServices(services =>
       {
           services.AddTransient<IQueueService, QueueService>();
+          services.AddSingleton<ICosmosDbService<Product>, CosmosDbService>();
           //services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
       })
       .Build();

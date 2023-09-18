@@ -17,7 +17,7 @@ namespace TriggerChain.Controllers
 
         public ProductQueue(ILoggerFactory loggerFactory, IQueueService queueService)
         {
-            _logger = loggerFactory.CreateLogger<ReceiveHttp>();
+            _logger = loggerFactory.CreateLogger<ProductQueue>();
             _queueService = queueService;
         }
 

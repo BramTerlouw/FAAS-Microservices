@@ -1,4 +1,8 @@
 ﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Configuration;
+using TriggerChain.Controllers;
 using TriggerChain.Models;
 using Container = Microsoft.Azure.Cosmos.Container;
 
@@ -7,23 +11,43 @@ namespace TriggerChain.Services
     public class CosmosDbService : ICosmosDbService<Product>
     {
         private Container _container;
+        private readonly ILogger _logger;
 
-        public CosmosDbService(
-            CosmosClient cosmosDbClient,
-            string databaseName,
-            string containerName)
+        public CosmosDbService(ILoggerFactory loggerFactory)
         {
-            _container = cosmosDbClient.GetContainer(databaseName, containerName);
+            _logger = loggerFactory.CreateLogger<CosmosDbService>();
+            var account = "https://localhost:8081/";
+            var key = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+
+            var cosmosDbClient = new CosmosClient(account, key);
+
+            var database = cosmosDbClient.GetDatabase("orderDB");
+            _container = database.GetContainer("orders");
         }
 
         public async Task AddAsync(Product item)
         {
-            await _container.CreateItemAsync(item, new PartitionKey(item.ProductID));
+            try
+            {
+                await _container.CreateItemAsync(item, new PartitionKey(item.ProductID));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: {ex.Message}");
+            }
+            
         }
 
         public async Task DeleteAsync(string id)
         {
-            await _container.DeleteItemAsync<Product>(id, new PartitionKey(id));
+            try
+            {
+                await _container.DeleteItemAsync<Product>(id, new PartitionKey(id));
+            } 
+            catch (Exception)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public async Task<Product> GetAsync(string id)
@@ -35,7 +59,7 @@ namespace TriggerChain.Services
             }
             catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                Console.WriteLine(ex.Message);
+                _logger.LogError($"Error: {ex.Message}");
             }
             return response;
         }
@@ -56,7 +80,14 @@ namespace TriggerChain.Services
 
         public async Task UpdateAsync(string id, Product UpdateItem)
         {
-            await _container.UpsertItemAsync(UpdateItem, new PartitionKey(id));
+            try
+            {
+                await _container.UpsertItemAsync(UpdateItem, new PartitionKey(id));
+            }
+            catch (Exception) 
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

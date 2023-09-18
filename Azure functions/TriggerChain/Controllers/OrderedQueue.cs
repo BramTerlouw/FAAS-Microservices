@@ -4,16 +4,19 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TriggerChain.Models;
+using TriggerChain.Services;
 
 namespace TriggerChain.Controllers
 {
     public class OrderedQueue
     {
         private readonly ILogger _logger;
+        private readonly ICosmosDbService<Product> _cosmosDbService;
 
-        public OrderedQueue(ILoggerFactory loggerFactory)
+        public OrderedQueue(ILoggerFactory loggerFactory, ICosmosDbService<Product> cosmosDbService)
         {
-            _logger = loggerFactory.CreateLogger<ReceiveHttp>();
+            _logger = loggerFactory.CreateLogger<OrderedQueue>();
+            _cosmosDbService = cosmosDbService;
         }
 
         [Function(nameof(OrderedQueue))]
@@ -27,7 +30,7 @@ namespace TriggerChain.Controllers
             if (product != null) 
             {
                 _logger.LogInformation("Ordered product is added to CosmosDB");
-                //_cosmosDbService.AddAsync(product);
+                _cosmosDbService.AddAsync(product);
             }
         }
     }
