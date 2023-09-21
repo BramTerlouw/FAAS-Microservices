@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
+using TriggerChain.Services.Interfaces;
 
 namespace TriggerChain.Services
 {

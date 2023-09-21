@@ -1,25 +1,27 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using System.Configuration;
 using TriggerChain.Models;
+using TriggerChain.Services.Interfaces;
 using Container = Microsoft.Azure.Cosmos.Container;
 
 namespace TriggerChain.Services
 {
-    public class CosmosDbService : ICosmosDbService<Product>
+    public class ProductService : ICosmosDbService<Product>
     {
         private Container _container;
         private readonly ILogger _logger;
 
-        public CosmosDbService(ILoggerFactory loggerFactory)
+        public ProductService(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<CosmosDbService>();
-            var account = "https://localhost:8081";
-            var key = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+            _logger = loggerFactory.CreateLogger<ProductService>();
 
+            var key = ConfigurationManager.AppSettings["key"];
+            var account = ConfigurationManager.AppSettings["account"];
             var cosmosDbClient = new CosmosClient(account, key);
 
-            var database = cosmosDbClient.GetDatabase("orderDB");
-            _container = database.GetContainer("orders");
+            var database = cosmosDbClient.GetDatabase("productsDB");
+            _container = database.GetContainer("products");
         }
 
         public async Task AddAsync(Product item)

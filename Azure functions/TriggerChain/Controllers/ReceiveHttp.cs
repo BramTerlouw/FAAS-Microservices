@@ -4,7 +4,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TriggerChain.Models;
-using TriggerChain.Services;
+using TriggerChain.Services.Interfaces;
 
 namespace TriggerChain.Controllers
 {

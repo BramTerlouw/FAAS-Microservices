@@ -1,4 +1,4 @@
-﻿namespace TriggerChain.Services
+﻿namespace TriggerChain.Services.Interfaces
 {
     public interface IQueueService
     {

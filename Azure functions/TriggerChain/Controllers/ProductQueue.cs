@@ -3,7 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using TriggerChain.Models;
-using TriggerChain.Services;
+using TriggerChain.Services.Interfaces;
 
 namespace TriggerChain.Controllers
 {
@@ -11,11 +11,13 @@ namespace TriggerChain.Controllers
     {
         private readonly ILogger _logger;
         private readonly IQueueService _queueService;
+        private readonly ICosmosDbService<Product> _productService;
 
-        public ProductQueue(ILoggerFactory loggerFactory, IQueueService queueService)
+        public ProductQueue(ILoggerFactory loggerFactory, IQueueService queueService, ICosmosDbService<Product> productService)
         {
             _logger = loggerFactory.CreateLogger<ProductQueue>();
             _queueService = queueService;
+            _productService = productService;
         }
 
         [Function(nameof(ProductQueue))]
@@ -26,11 +28,12 @@ namespace TriggerChain.Controllers
             // Deserialize message back into a product.
             Product? product = JsonConvert.DeserializeObject<Product>(message.Body.ToString());
 
-            // Change propertie isOrdered of product to true.
+            // Add product to cosmos db and new order to queue
             if (product != null)
             {
-                product.isOrdered = true;
-                await _queueService.SendQueueMessageAsync("orderedproductqueue", product);
+                Order order = new Order(1, "Order1", product, DateTime.Now);
+                await _productService.AddAsync(product);
+                await _queueService.SendQueueMessageAsync("orderedproductqueue", order);
             }
         }
     }

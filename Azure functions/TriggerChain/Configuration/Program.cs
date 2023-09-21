@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using TriggerChain.Models;
 using TriggerChain.Services;
+using TriggerChain.Services.Interfaces;
 
 var host = new HostBuilder()
       .ConfigureAppConfiguration(configurationBuilder =>
@@ -10,25 +11,11 @@ var host = new HostBuilder()
       .ConfigureFunctionsWorkerDefaults()
       .ConfigureServices(services =>
       {
-          services.AddTransient<IQueueService, QueueService>();
-          services.AddSingleton<ICosmosDbService<Product>, CosmosDbService>();
-          //services.AddSingleton<ICosmosDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
+          services.AddSingleton<IQueueService, QueueService>();
+          services.AddTransient<ICosmosDbService<Product>, ProductService>();
+          services.AddTransient<ITableStorageService<Order>, OrderService>();
+
       })
       .Build();
 
 host.Run();
-
-//private static async Task<CosmosDbService> InitializeCosmosClientInstanceAsync(IConfigurationSection configurationSection)
-//{
-//    var databaseName = configurationSection["DatabaseName"];
-//    var containerName = configurationSection["ContainerName"];
-//    var account = configurationSection["Account"];
-//    var key = configurationSection["key"];
-
-//    var client = new Microsoft.Azure.Cosmos.CosmosClient(account, key);
-//    var database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
-//    await database.Database.CreateContainerIfNotExistsAsync(containerName, "/id");
-
-//    var cosmosDbService = new CosmosDbService(client, databaseName, containerName);
-//    return cosmosDbService;
-//}

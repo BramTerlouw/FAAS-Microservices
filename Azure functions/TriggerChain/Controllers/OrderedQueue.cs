@@ -1,36 +1,40 @@
 using Azure.Storage.Queues.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using TriggerChain.Models;
-using TriggerChain.Services;
+using TriggerChain.Services.Interfaces;
 
 namespace TriggerChain.Controllers
 {
     public class OrderedQueue
     {
         private readonly ILogger _logger;
-        private readonly ICosmosDbService<Product> _cosmosDbService;
+        private readonly ITableStorageService<Order> _orderService;
 
-        public OrderedQueue(ILoggerFactory loggerFactory, ICosmosDbService<Product> cosmosDbService)
+        public OrderedQueue(ILoggerFactory loggerFactory, ITableStorageService<Order> orderService)
         {
             _logger = loggerFactory.CreateLogger<OrderedQueue>();
-            _cosmosDbService = cosmosDbService;
+            _orderService = orderService;
         }
 
         [Function(nameof(OrderedQueue))]
-        public void Run([QueueTrigger("orderedproductqueue", Connection = "default")] QueueMessage message)
+        public async Task RunAsync([QueueTrigger("orderedproductqueue", Connection = "default")] QueueMessage message)
         {
             _logger.LogInformation("C# Queue trigger function processed a request.");
 
             // Deserialize message back into a product.
-            Product? product = JsonConvert.DeserializeObject<Product>(message.Body.ToString());
+            Order? order= JsonConvert.DeserializeObject<Order>(message.Body.ToString());
             
             // If product not null, add to database.
-            if (product != null) 
+            if (order != null) 
             {
                 _logger.LogInformation("Ordered product is added to CosmosDB");
-                _cosmosDbService.AddAsync(product);
+                
+                // Get table reference from service and add to table
+                CloudTable cloudTable = await _orderService.GetTableReference("orders");
+                await _orderService.InsertRecordToTable(cloudTable, order);
             }
         }
     }

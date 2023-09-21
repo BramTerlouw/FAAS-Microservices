@@ -1,4 +1,4 @@
-﻿namespace TriggerChain.Services
+﻿namespace TriggerChain.Services.Interfaces
 {
     public interface ICosmosDbService<T> where T : class
     {
