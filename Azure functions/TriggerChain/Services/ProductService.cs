@@ -37,18 +37,6 @@ namespace TriggerChain.Services
             
         }
 
-        public async Task DeleteAsync(string id)
-        {
-            try
-            {
-                await _container.DeleteItemAsync<Product>(id, new PartitionKey(id));
-            } 
-            catch (Exception)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public async Task<Product> GetAsync(string id)
         {
             ItemResponse<Product> response = null;
@@ -75,18 +63,6 @@ namespace TriggerChain.Services
             }
 
             return results;
-        }
-
-        public async Task UpdateAsync(string id, Product UpdateItem)
-        {
-            try
-            {
-                await _container.UpsertItemAsync(UpdateItem, new PartitionKey(id));
-            }
-            catch (Exception) 
-            {
-                throw new NotImplementedException();
-            }
         }
     }
 }

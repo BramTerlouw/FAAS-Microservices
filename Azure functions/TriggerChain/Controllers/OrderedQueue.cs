@@ -31,10 +31,10 @@ namespace TriggerChain.Controllers
             if (order != null) 
             {
                 _logger.LogInformation("Ordered product is added to CosmosDB");
-                
-                // Get table reference from service and add to table
-                CloudTable cloudTable = await _orderService.GetTableReference("orders");
-                await _orderService.InsertRecordToTable(cloudTable, order);
+
+                // Create and add to table
+                await _orderService.CreateTable();
+                await _orderService.InsertRecordToTable(order);
             }
         }
     }

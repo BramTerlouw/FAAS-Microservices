@@ -8,34 +8,33 @@ namespace TriggerChain.Services
 {
     public class OrderService : ITableStorageService<Order>
     {
-        private readonly CloudTableClient _tableClient;
+        private CloudTable _table;
         
         public OrderService()
         {
             CloudStorageAccount cloudStorageAccount = CloudStorageAccount.Parse(ConfigurationManager.AppSettings["connString"]);
-            _tableClient = cloudStorageAccount.CreateCloudTableClient();
+            CloudTableClient tableClient = cloudStorageAccount.CreateCloudTableClient();
+            _table = tableClient.GetTableReference("orders");
         }
 
-        public async Task<CloudTable> GetTableReference(string tableName)
+        public async Task CreateTable()
         {
-            CloudTable cloudTable = _tableClient.GetTableReference(tableName);
             try
             {
-                var result = await cloudTable.CreateIfNotExistsAsync();
+                var result = await _table.CreateIfNotExistsAsync();
             }
             catch (StorageException ex)
             {
                 Console.WriteLine(ex.Message.ToString());
             }
-            return cloudTable;
         }
 
-        public async Task InsertRecordToTable(CloudTable cloudTable, Order order)
+        public async Task InsertRecordToTable(Order order)
         {
             try
             {
                 TableOperation tableOperation = TableOperation.Insert(order);
-                TableResult result = await cloudTable.ExecuteAsync(tableOperation);
+                TableResult result = await _table.ExecuteAsync(tableOperation);
                 Order? insertedCustomer = result.Result as Order;
             }
             catch (StorageException e)
@@ -44,35 +43,21 @@ namespace TriggerChain.Services
             }
         }
 
-        public async Task<Order?> RetrieveRecord(CloudTable cloudTable, string partitionKey, string rowKey)
+        public async Task<Order?> RetrieveRecord(string partitionKey, string rowKey)
         {
             TableOperation tableOperation = TableOperation.Retrieve<Order>(partitionKey, rowKey);
-            TableResult tableResult = await cloudTable.ExecuteAsync(tableOperation);
+            TableResult tableResult = await _table.ExecuteAsync(tableOperation);
             return tableResult.Result as Order;
         }
 
-        public async Task UpdateRecordInTable(CloudTable cloudTable)
-        {
-            string orderID = "1";
-            string orderName = "Nvidia rtx 4060";
-
-            Order? orderEntity = await RetrieveRecord(cloudTable, orderID, orderID + orderName);
-            if (orderEntity is not null)
-            {
-                orderEntity.OrderName = "Nvidia rtx 4060 UPDATED";
-                TableOperation tableOperation = TableOperation.Replace(orderEntity);
-                var result = await cloudTable.ExecuteAsync(tableOperation);
-            }
-        }
-
-        public List<Order> RetrieveAll(CloudTable cloudTable)
+        public List<Order> RetrieveAllAsync()
         {
             List<Order> orders = new List<Order>();
 
             TableQuery<Order> query = new TableQuery<Order>()
                    .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, "1"));
 
-            foreach (Order customer in cloudTable.ExecuteQuerySegmentedAsync(query, null).Result)
+            foreach (Order customer in _table.ExecuteQuerySegmentedAsync(query, null).Result)
             {
                 orders.Add(customer);
             }
