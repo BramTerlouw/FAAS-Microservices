@@ -25,7 +25,7 @@ namespace TriggerChain.Controllers
             _logger.LogInformation("C# HTTP trigger function processed a request.");
 
             // Create product to be added. (!!Ideally in body of post req!!)
-            Product product = new Product(1, "NVIDIA RTX 4090", false);
+            Product product = new Product("11111", "NVIDIA RTX 4090");
             string serializedProduct = JsonConvert.SerializeObject(product);
 
             // Create response with headers

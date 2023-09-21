@@ -16,8 +16,8 @@ namespace TriggerChain.Services
         {
             _logger = loggerFactory.CreateLogger<ProductService>();
 
-            var key = ConfigurationManager.AppSettings["key"];
-            var account = ConfigurationManager.AppSettings["account"];
+            var key = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+            var account = "https://localhost:8081";
             var cosmosDbClient = new CosmosClient(account, key);
 
             var database = cosmosDbClient.GetDatabase("productsDB");
@@ -28,7 +28,7 @@ namespace TriggerChain.Services
         {
             try
             {
-                await _container.CreateItemAsync(item, new PartitionKey(item.ProductID));
+                await _container.CreateItemAsync(item, new PartitionKey(item.id));
             }
             catch (Exception ex)
             {
